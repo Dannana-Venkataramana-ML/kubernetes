@@ -1,0 +1,12 @@
+cd ~
+
+docker pull erichough/nfs-server
+
+mkdir ~/shared
+
+docker run -d \
+  -v /home/$USER/shared:/exports \
+  -v /home/$USER/exports:/etc/exports:ro \
+  --cap-add SYS_ADMIN \
+  -p 2049:2049 \
+  erichough/nfs-server \

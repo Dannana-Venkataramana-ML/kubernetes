@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nextcloud
+  namespace: nextcloud
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nextcloud-data-pod
+  template:
+    metadata:
+      labels:
+        app: nextcloud-data-pod
+    spec:
+      containers:
+      - name: nextcloud
+        image: ghcr.io/linuxserver/nextcloud:25.0.3
+        imagePullPolicy: Always
+        env:
+        - name: PGID
+          value: "100"
+        - name: PUID
+          value: "1041"
+        - name: TZ
+          value: Asia/Kolkata
+        resources:
+          limits:
+            memory: "1Gi"
+            cpu: "1000m"
+        ports:
+        - name: http-port
+          containerPort: 80
+          protocol: TCP
+        volumeMounts:                      # < the volume mount in the container. Look at the relation volumelabel->pvc->pv
+         - mountPath: /config              
+           name: nfs-nextcloud
+           subPath: config
+         - mountPath: /data
+           name: nfs-nextcloud
+           subPath: data
+      volumes:
+      - name: nfs-nextcloud                # < linkname of the volume for the pvc
+        persistentVolumeClaim:
+          claimName: nextcloud-data-pvc

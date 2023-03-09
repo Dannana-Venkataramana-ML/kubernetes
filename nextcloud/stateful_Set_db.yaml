@@ -1,0 +1,55 @@
+
+
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: nextcloud-db
+  namespace: nextcloud
+spec:
+  serviceName: mariadb
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nextcloud
+      pod-label: nextcloud-db-pod
+  template:
+    metadata:
+      labels:
+        app: nextcloud
+        pod-label: nextcloud-db-pod
+    spec:
+      containers:
+      - name: mariadb
+        image: linuxserver/mariadb
+        imagePullPolicy: Always
+        ports:
+        - name: mariadb
+          containerPort: 3306
+        env:
+        - name: PGID
+          value: "100"
+        - name: PUID
+          value: "1041"
+        - name: TZ
+          value: Asia/Kolkata
+        - name: MYSQL_DATABASE
+          value: nextcloud
+        envFrom:
+        - secretRef:
+            name: nextcloud-db-secret
+        volumeMounts:
+          - name: nextcloud-db-storage
+            mountPath: /config
+            subPath: mariadb-config
+        resources:
+          limits:
+            cpu: "1"
+            memory: "1Gi"
+          requests:
+            cpu: "0.5"
+            memory: "512Mi"
+      volumes:
+        - name: nextcloud-db-storage
+          persistentVolumeClaim:
+            claimName: nextcloud-db-pvc-nfs
+      terminationGracePeriodSeconds: 1800
